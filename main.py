@@ -96,11 +96,9 @@ def get_data():
 
     df = pd.read_gbq(query = query, use_bqstorage_api=True)
 
-    result_dict = {}
+    df_dict = df.set_index('minute')[['num_users', 'mm_started']].to_dict('index')
 
-    for index, row in df.iterrows():
-
-        result_dict[str(row['minute'])] = {'num_users': row['num_users'], 'mm_started': row['mm_started']}
+    result_dict = {str(minute): df_dict.get(minute, {'num_users': 0, 'mm_started': 0}) for minute in range(1, 145)}
 
     return result_dict
 
