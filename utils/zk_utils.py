@@ -9,7 +9,7 @@ def zk_connection():
 
     return zk
 
-def update_znode(zk, path, new_data, slack_url):
+def update_znode(zk, path, new_data, default_data, slack_url):
 
     try:
         json_data = json.dumps(new_data, indent=4)
@@ -20,8 +20,20 @@ def update_znode(zk, path, new_data, slack_url):
         else:
             message = f"Znode '{path}' not found"
 
-    except Exception as e:
-        message = f"Error updating znode '{path}': {e}"
+    except:
+
+        try:
+            json_data = json.dumps(default_data, indent=4)
+            
+            if zk.exists(path):
+                zk.set(path, json_data.encode('utf-8'))
+                message = f"Znode '{path}' updated with new data: {json_data}"
+            else:
+                message = f"Znode '{path}' not found"
+
+        except Exception as e:
+
+            message = f"Error updating znode '{path}': {e}"
 
     print(message)
     requests.post(slack_url, json={"text": message})

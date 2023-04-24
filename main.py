@@ -44,9 +44,10 @@ def update_window(zk, znode_path, data, scaler, dist, window, slack_url):
 
     v4_window = get_window([0.15, 3, 6, 9, 10, 11, num_users, mm_starts], scaler, dist, agg_type='mean')
 
-    window['v4'] = v4_window
+    window_new = window.copy()
+    window_new['v4'] = v4_window
 
-    update_znode(zk, znode_path, window, slack_url)
+    update_znode(zk, znode_path, window_new, window, slack_url)
 
 if __name__ == "__main__":
 
