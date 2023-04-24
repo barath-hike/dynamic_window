@@ -23,7 +23,7 @@ zk = zk_connection()
 scaler, dist = load_models(visible_dist)
 
 # load data
-data = get_data(game)
+data = get_data(game, slack_url)
 
 # function to load data periodically
 
