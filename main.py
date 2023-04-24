@@ -7,7 +7,7 @@ from utils.data_utils import get_data
 from utils.zk_utils import zk_connection, update_znode
 from utils.timer_utils import nearest_minute_10, nearest_midnight_noon, nearest_10_minutes_ist
 from utils.config_utils import load_config, load_slack_config
-from utils.mongo_utils import mongo_connection
+from utils.mongo_utils import mongo_connection, push_to_mongo
 
 config = load_config()
 
@@ -41,17 +41,19 @@ def call_get_data(slack_url):
 
 def update_window(zk, game, znode_path, data, scaler, dist, window, slack_url):
 
-    time = nearest_10_minutes_ist()
+    minute = nearest_10_minutes_ist()
 
-    num_users = data[str(time)]['num_users']
-    mm_starts = data[str(time)]['mm_started']
+    num_users = data[str(minute)]['num_users']
+    mm_starts = data[str(minute)]['mm_started']
 
     v4_window = get_window([0.15, 3, 6, 9, 10, 11, num_users, mm_starts], scaler, dist, agg_type='mean')
 
     window_new = window.copy()
     window_new['v4'] = v4_window
 
-    update_znode(zk, game, znode_path, window_new, window, slack_url)
+    updated_window = update_znode(zk, game, znode_path, window_new, window, slack_url)
+
+    push_to_mongo(col, game, 1.0, minute, updated_window, num_users, mm_starts)
 
 if __name__ == "__main__":
 

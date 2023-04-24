@@ -13,7 +13,7 @@ def nearest_10_minutes_ist():
     if minutes // 60 > 0:
         nearest_10_minutes += timedelta(hours=1)
 
-    return int(np.floor((int(nearest_10_minutes.strftime("%H")) * 60 + int(nearest_10_minutes.strftime("%M")))/10) + 1)
+    return int(np.floor((nearest_10_minutes.hour * 60 + nearest_10_minutes.minute)/10) + 1)
 
 def nearest_minute_10(dt):
     return dt + timedelta(minutes=(10 - dt.minute % 10))

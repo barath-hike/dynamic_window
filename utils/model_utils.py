@@ -15,7 +15,7 @@ for physical_device in physical_devices:
 
 tfk = tf.keras
 
-def load_models(visible_dist):
+def load_models():
     
     config = load_config()
     visible_dist = config['visible_dist']

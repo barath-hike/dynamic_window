@@ -1,6 +1,9 @@
 import pymongo
 import urllib.parse
 from utils.config_utils import load_config
+from datetime import datetime
+import pytz
+import time
 
 def mongo_connection():
 
@@ -20,3 +23,22 @@ def mongo_connection():
     col = db[collection_name]
 
     return col
+
+def push_to_mongo(col, game, table, minute, window, num_users, mm_starts):
+
+    ist_timezone = pytz.timezone("Asia/Kolkata")
+    date = datetime.now(ist_timezone).strftime("%Y-%m-%d")
+
+    data = {
+        'dt': date,
+        'minute': int(minute),
+        'game_table': f'{game}-{table:.2f}',
+        'time_stamp': time.time(),
+        'window': window,
+        'num_users': int(num_users),
+        'mm_starts': int(mm_starts)
+    }
+
+    print(data)
+
+    col.insert_one(data)
