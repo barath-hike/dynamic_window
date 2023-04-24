@@ -14,11 +14,7 @@ game = config['game']
 znode_path = config['znode_path'] + game
 window = config['window']
 visible_dist = config['visible_dist']
-
-try:
-    slack_url = load_slack_config('./slack_url.json')
-except:
-    slack_url = ''
+slack_url = load_slack_config('./slack_url.json')
 
 # zk config
 zk = zk_connection()
