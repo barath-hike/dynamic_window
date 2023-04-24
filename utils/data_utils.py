@@ -1,7 +1,12 @@
 import pandas as pd
 import requests
+from utils.config_utils import load_config
 
-def get_data(game, slack_url):
+def get_data(slack_url):
+
+    config = load_config()
+
+    game = config['game']
 
     query = """
 

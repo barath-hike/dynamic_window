@@ -7,35 +7,39 @@ from utils.data_utils import get_data
 from utils.zk_utils import zk_connection, update_znode
 from utils.timer_utils import nearest_minute_10, nearest_midnight_noon, nearest_10_minutes_ist
 from utils.config_utils import load_config, load_slack_config
+from utils.mongo_utils import mongo_connection
 
-config = load_config('./config.json')
+config = load_config()
 
 game = config['game']
-znode_path = config['znode_path'] + game
+znode_path = config['znode_path']
 window = config['window']
-visible_dist = config['visible_dist']
-slack_url = load_slack_config('./slack_url.json')
 
-# zk config
+slack_url = load_slack_config()
+
+# zk connection
 zk = zk_connection()
 
+# mongo connection
+col = mongo_connection()
+
 # load ml models
-scaler, dist = load_models(visible_dist)
+scaler, dist = load_models()
 
 # load data
-data = get_data(game, slack_url)
+data = get_data(slack_url)
 
 # function to load data periodically
 
-def call_get_data(game, slack_url):
+def call_get_data(slack_url):
 
     global data
 
-    data = get_data(game, slack_url)
+    data = get_data(slack_url)
 
-# window config update functions
+# window config update function
 
-def update_window(zk, znode_path, data, scaler, dist, window, slack_url):
+def update_window(zk, game, znode_path, data, scaler, dist, window, slack_url):
 
     time = nearest_10_minutes_ist()
 
@@ -47,7 +51,7 @@ def update_window(zk, znode_path, data, scaler, dist, window, slack_url):
     window_new = window.copy()
     window_new['v4'] = v4_window
 
-    update_znode(zk, znode_path, window_new, window, slack_url)
+    update_znode(zk, game, znode_path, window_new, window, slack_url)
 
 if __name__ == "__main__":
 
@@ -56,12 +60,12 @@ if __name__ == "__main__":
     # Schedule function_1 to run every 10 minutes, starting from the nearest 10th minute
     start_time_1 = nearest_minute_10(datetime.now())
     scheduler.add_job(update_window, 'interval', minutes=10, start_date=start_time_1, 
-                      args=[zk, znode_path, data, scaler, dist, window, slack_url])
+                      args=[zk, game, znode_path, data, scaler, dist, window, slack_url])
 
     # Schedule function_2 to run every 12 hours, starting from the nearest midnight or noon
     start_time_2 = nearest_midnight_noon(datetime.now())
     scheduler.add_job(call_get_data, 'interval', hours=12, start_date=start_time_2,
-                      args=[game, slack_url])
+                      args=[slack_url])
 
     scheduler.start()
 

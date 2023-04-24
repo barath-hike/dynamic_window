@@ -1,8 +1,21 @@
 {
     "game": "fruitfight",
+
     "znode_path": "/mazuma/matchmaking/milestonesMapPerGame/",
+
     "window": {
-        "v4": {},
+        "v4": {
+            "0": "10",
+            "1000": "10",
+            "2000": "25",
+            "3000": "25",
+            "4000": "50",
+            "5000": "50",
+            "6000": "100",
+            "7000": "200",
+            "8000": "300",
+            "9000": "5000"
+        },
         "v3": {
             "0": "1000",
             "1000": "3000",
@@ -13,5 +26,25 @@
             "6000": "1000000"
         }
     },
-    "visible_dist": "lognormal"
+
+    "visible_dist": "lognormal",
+
+    "prod": {},
+
+    "staging": {
+        "zk": {
+            "host": "10.20.0.21:2181"
+        },
+        "mongo": {
+            "host": "10.26.0.23",
+            "port": 27015,
+            "user_name": "dbwriter",
+            "pass_word": "Db@wr1t3r07122020",
+            "db_name": "rush_matchmaking",
+            "collection_name": "dynamic_window_config"
+        }
+    },
+
+    "env": "staging"
+
 }

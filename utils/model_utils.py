@@ -3,6 +3,7 @@ import pickle
 import os
 import numpy as np
 
+from utils.config_utils import load_config
 from ml_model.gen_model import GenModel
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -16,6 +17,9 @@ tfk = tf.keras
 
 def load_models(visible_dist):
     
+    config = load_config()
+    visible_dist = config['visible_dist']
+
     # scaler
 
     with open('./ml_model/saved_models/scaler.pickle', 'rb') as f:

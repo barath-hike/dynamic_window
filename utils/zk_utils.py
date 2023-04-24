@@ -1,15 +1,33 @@
 from kazoo.client import KazooClient
 import json
 import requests
+from datetime import datetime
+import pytz
+
+from utils.config_utils import load_config
 
 def zk_connection():
 
-    zk = KazooClient(hosts='10.20.0.21:2181')  # Replace with your Zookeeper connection string
+    config = load_config()
+
+    host = config[config['env']]['zk']['host']
+
+    zk = KazooClient(hosts=host)  # Replace with your Zookeeper connection string
     zk.start()  # Establish the connection
 
     return zk
 
-def update_znode(zk, path, new_data, default_data, slack_url):
+def update_znode(zk, game, znode_path, new_data, default_data, slack_url):
+
+    ist_timezone = pytz.timezone("Asia/Kolkata")
+    now_ist = datetime.now(ist_timezone)
+
+    # if now_ist.hour >= 2 and now_ist.hour < 5:
+    #     path = znode_path + game + '/120-300'
+    # else:
+    #     path = znode_path + game
+
+    path = znode_path + game
 
     try:
         json_data = json.dumps(new_data, indent=4)
