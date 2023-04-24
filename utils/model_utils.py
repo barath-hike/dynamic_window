@@ -41,7 +41,7 @@ def ensure_increasing_order(arr):
             arr[i] = arr[i - 1]
     return arr
 
-def get_window(x, scaler, dist, agg_type='median'):
+def get_window(x, scaler, dist, agg_type='mean'):
 
     x = np.array(x).reshape(1, -1)
     x = scaler.transform(x)
