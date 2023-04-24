@@ -13,6 +13,5 @@
             "6000": "1000000"
         }
     },
-    "visible_dist": "lognormal",
-    "slack_url": "https://hooks.slack.com/services/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"
+    "visible_dist": "lognormal"
 }

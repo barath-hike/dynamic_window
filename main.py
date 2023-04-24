@@ -6,7 +6,7 @@ from utils.model_utils import load_models, get_window
 from utils.data_utils import get_data
 from utils.zk_utils import zk_connection, update_znode
 from utils.timer_utils import nearest_minute_10, nearest_midnight_noon, nearest_10_minutes_ist
-from utils.config_utils import load_config
+from utils.config_utils import load_config, load_slack_config
 
 config = load_config('./config.json')
 
@@ -14,7 +14,11 @@ game = config['game']
 znode_path = config['znode_path'] + game
 window = config['window']
 visible_dist = config['visible_dist']
-slack_url = config['slack_url']
+
+try:
+    slack_url = load_slack_config('./slack_url.json')
+except:
+    slack_url = ''
 
 # zk config
 zk = zk_connection()
