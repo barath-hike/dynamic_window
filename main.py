@@ -14,6 +14,7 @@ game = config['game']
 znode_path = config['znode_path'] + game
 window = config['window']
 visible_dist = config['visible_dist']
+slack_url = config['slack_url']
 
 # zk config
 zk = zk_connection()
@@ -36,7 +37,7 @@ def call_get_data(game):
 
 # window config update functions
 
-def update_window(zk, znode_path, data, scaler, dist, window):
+def update_window(zk, znode_path, data, scaler, dist, window, slack_url):
 
     time = nearest_10_minutes_ist()
 
@@ -47,7 +48,7 @@ def update_window(zk, znode_path, data, scaler, dist, window):
 
     window['v4'] = v4_window
 
-    update_znode(zk, znode_path, window)
+    update_znode(zk, znode_path, window, slack_url)
 
 if __name__ == "__main__":
 
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     # Schedule function_1 to run every 10 minutes, starting from the nearest 10th minute
     start_time_1 = nearest_minute_10(datetime.now())
     scheduler.add_job(update_window, 'interval', minutes=10, start_date=start_time_1, 
-                      args=[zk, znode_path, data, scaler, dist, window])
+                      args=[zk, znode_path, data, scaler, dist, window, slack_url])
 
     # Schedule function_2 to run every 12 hours, starting from the nearest midnight or noon
     start_time_2 = nearest_midnight_noon(datetime.now())
