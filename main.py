@@ -27,13 +27,11 @@ data = get_data(game)
 
 # function to load data periodically
 
-def call_get_data(game):
+def call_get_data(game, slack_url):
 
     global data
 
-    data = get_data(game)
-
-    print('Data Loaded')
+    data = get_data(game, slack_url)
 
 # window config update functions
 
@@ -62,7 +60,7 @@ if __name__ == "__main__":
     # Schedule function_2 to run every 12 hours, starting from the nearest midnight or noon
     start_time_2 = nearest_midnight_noon(datetime.now())
     scheduler.add_job(call_get_data, 'interval', hours=12, start_date=start_time_2,
-                      args=[game])
+                      args=[game, slack_url])
 
     scheduler.start()
 

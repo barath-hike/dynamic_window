@@ -1,6 +1,7 @@
 import pandas as pd
+import requests
 
-def get_data(game):
+def get_data(game, slack_url):
 
     query = """
 
@@ -49,5 +50,10 @@ def get_data(game):
     df_dict = df.set_index('minute')[['num_users', 'mm_started']].to_dict('index')
 
     result_dict = {str(minute): df_dict.get(minute, {'num_users': 0, 'mm_started': 0}) for minute in range(1, 145)}
+
+    message = 'Data loaded successfully'
+
+    print(message)
+    requests.post(slack_url, json={"text": message})
 
     return result_dict
