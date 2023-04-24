@@ -10,10 +10,14 @@ def zk_connection():
 
 def update_znode(zk, path, new_data):
 
-    json_data = json.dumps(new_data, indent=4)
-    
-    if zk.exists(path):
-        zk.set(path, json_data.encode('utf-8'))
-        print(f"Znode '{path}' updated with new data: {json_data}")
-    else:
-        print(f"Znode '{path}' not found")
+    try:
+        json_data = json.dumps(new_data, indent=4)
+        
+        if zk.exists(path):
+            zk.set(path, json_data.encode('utf-8'))
+            print(f"Znode '{path}' updated with new data: {json_data}")
+        else:
+            print(f"Znode '{path}' not found")
+
+    except Exception as e:
+        print(f"Error updating znode '{path}': {e}")
