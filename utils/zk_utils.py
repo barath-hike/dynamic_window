@@ -63,14 +63,15 @@ def update_znode(zk, game, znode_path, new_data, default_data, slack_url):
 
     try:
 
-        json_data = json.dumps(new_data, indent=4).encode('utf-8')
+        json_data = json.dumps(new_data, indent=4)
+        encoded_data = json_data.encode('utf-8')
 
         if path_exists_in_zk(zk, path):
 
-            if not set_zknode(zk, path, json_data):
+            if not set_zknode(zk, path, encoded_data):
                 raise Exception("Failed to update znode with new data")
 
-            message = f"Znode '{path}' updated with new data: {new_data}"
+            message = f"Znode '{path}' updated with new data: {json_data}"
             updated_window = new_data.copy()
 
         else:
@@ -81,14 +82,15 @@ def update_znode(zk, game, znode_path, new_data, default_data, slack_url):
 
         try:
 
-            json_data = json.dumps(default_data, indent=4).encode('utf-8')
+            json_data = json.dumps(default_data, indent=4)
+            encoded_data = json_data.encode('utf-8')
 
             if path_exists_in_zk(zk, path):
 
-                if not set_zknode(zk, path, json_data):
+                if not set_zknode(zk, path, encoded_data):
                     raise Exception("Failed to update znode with default data")
 
-                message = f"Znode '{path}' updated with new data: {default_data}"
+                message = f"Znode '{path}' updated with new data: {json_data}"
                 updated_window = default_data.copy()
 
             else:

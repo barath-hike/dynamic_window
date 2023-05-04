@@ -27,7 +27,7 @@ col = mongo_connection()
 scaler, dist = load_models()
 
 # load data
-data = get_data(slack_url)
+data = get_data(slack_url, {})
 
 # function to load data periodically
 
@@ -35,7 +35,7 @@ def call_get_data(slack_url):
 
     global data
 
-    data = get_data(slack_url)
+    data = get_data(slack_url, data)
 
 # window config update function
 
