@@ -31,7 +31,7 @@
 
     "prod": {
         "zk": {
-            "host": "zk01-platform.hike.in:2181"
+            "host": ["zk01-platform.hike.in:2181", "zk02-platform.hike.in:2181", "zk03-platform.hike.in:2181"]
         },
         "mongo": {
             "host": "matchmaking-query.getrushapp.com",
@@ -45,7 +45,7 @@
 
     "staging": {
         "zk": {
-            "host": "10.20.0.21:2181"
+            "host": ["10.20.0.21:2181"]
         },
         "mongo": {
             "host": "10.26.0.23",
