@@ -29,7 +29,19 @@
 
     "visible_dist": "lognormal",
 
-    "prod": {},
+    "prod": {
+        "zk": {
+            "host": "zk01-platform.hike.in:2181"
+        },
+        "mongo": {
+            "host": "matchmaking-query.getrushapp.com",
+            "port": 27015,
+            "user_name": "matchmaker",
+            "pass_word": "M@tcHmak3r14102021",
+            "db_name": "rush",
+            "collection_name": "dynamic_window_config"
+        }
+    },
 
     "staging": {
         "zk": {

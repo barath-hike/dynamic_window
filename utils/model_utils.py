@@ -49,7 +49,7 @@ def get_window(x, scaler, dist, agg_type='mean'):
 
     x = np.array(x).reshape(1, -1)
     x = scaler.transform(x)
-    pred = np.array(dist.sample_n(x, 1000))
+    pred = np.array(dist.sample_n(x, 10))
 
     if agg_type == 'median':
         pred = np.squeeze(np.round(np.median(pred, axis=0)).astype('int32'))
