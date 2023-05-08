@@ -2,10 +2,11 @@ import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 
-from utils.model_utils import load_models, get_window
+from utils.generative_model_utils import get_window as get_window_generative
+from utils.genetic_algorithm_utils import get_window as get_window_genetic
 from utils.data_utils import get_data
 from utils.zk_utils import zk_connection, update_znode
-from utils.timer_utils import nearest_minute_10, nearest_midnight_noon, nearest_10_minutes_ist
+from utils.timer_utils import nearest_minute, nearest_midnight_noon, nearest_10_minutes_ist
 from utils.config_utils import load_config, load_slack_config
 from utils.mongo_utils import mongo_connection, push_to_mongo
 
@@ -14,6 +15,7 @@ config = load_config()
 game = config['game']
 znode_path = config['znode_path']
 window = config['window']
+algo = config['algo']
 
 slack_url = load_slack_config()
 
@@ -22,9 +24,6 @@ zk = zk_connection()
 
 # mongo connection
 col = mongo_connection()
-
-# load ml models
-scaler, dist = load_models()
 
 # load data
 data = get_data(slack_url, {})
@@ -39,14 +38,17 @@ def call_get_data(slack_url):
 
 # window config update function
 
-def update_window(zk, game, znode_path, data, scaler, dist, window, slack_url):
+def update_window(algo, zk, game, znode_path, data, window, slack_url):
 
     minute = nearest_10_minutes_ist()
 
     num_users = data[str(minute)]['num_users']
     mm_starts = data[str(minute)]['mm_started']
 
-    v4_window = get_window([0.15, 3, 6, 9, 10, 11, num_users, mm_starts], scaler, dist, agg_type='mean')
+    if algo == 'generative':
+        v4_window = get_window_generative([0.15, 3, 6, 9, 10, 11, num_users, mm_starts], agg_type='mean')
+    elif algo == 'genetic':
+        v4_window = get_window_genetic(num_users, mm_starts, minute, game)
 
     window_new = window.copy()
     window_new['v4'] = v4_window
@@ -59,10 +61,15 @@ if __name__ == "__main__":
 
     scheduler = BackgroundScheduler()
 
+    if algo == 'generative':
+        rounding = 9.5
+    elif algo == 'genetic':
+        rounding = 8.5
+
     # Schedule function_1 to run every 10 minutes, starting from the nearest 10th minute
-    start_time_1 = nearest_minute_10(datetime.now())
+    start_time_1 = nearest_minute(datetime.now(), rounding=rounding)
     scheduler.add_job(update_window, 'interval', minutes=10, start_date=start_time_1, 
-                      args=[zk, game, znode_path, data, scaler, dist, window, slack_url])
+                      args=[algo, zk, game, znode_path, data, window, slack_url])
 
     # Schedule function_2 to run every 12 hours, starting from the nearest midnight or noon
     start_time_2 = nearest_midnight_noon(datetime.now())

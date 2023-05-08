@@ -52,7 +52,7 @@ def get_data(slack_url, fallback_data):
 
     try:
 
-      df = pd.read_gbq(query = query, use_bqstorage_api=True, project_id='analytics-156605')
+      df = pd.read_gbq(query = query, use_bqstorage_api=True)
 
       df_dict = df.set_index('minute')[['num_users', 'mm_started']].to_dict('index')
 
@@ -60,7 +60,7 @@ def get_data(slack_url, fallback_data):
 
       message = 'Data loaded successfully'
 
-    except:
+    except Exception as e:
 
       if fallback_data == {}:
 
@@ -69,6 +69,8 @@ def get_data(slack_url, fallback_data):
       else:
 
         result_dict = fallback_data
+
+      print(e)
 
       message = 'Data load failed, using old data'
 

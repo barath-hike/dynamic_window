@@ -15,8 +15,8 @@ def nearest_10_minutes_ist():
 
     return int(np.floor((nearest_10_minutes.hour * 60 + nearest_10_minutes.minute)/10) + 1)
 
-def nearest_minute_10(dt):
-    return dt + timedelta(minutes=(10 - dt.minute % 10))
+def nearest_minute(dt, rounding=10):
+    return dt + timedelta(minutes=(rounding - dt.minute % 10))
 
 def nearest_midnight_noon(dt):
     if dt.hour < 12:
