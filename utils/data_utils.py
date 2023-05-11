@@ -6,12 +6,25 @@ def get_data(slack_url, fallback_data):
 
     config = load_config()
 
-    game = config['game']
+    games = config['game']
+    tables = config['table']
+
+    for i, game in enumerate(games):
+      if i == 0:
+        game_string = "'" + game + "'"
+      else:
+        game_string = game_string + ', ' + "'" + game + "'"
+
+    for i, table in enumerate(tables):
+      if i == 0:
+        table_string = str(table)
+      else:
+        table_string = table_string + ', ' + str(table)
 
     query = """
 
       select * from (
-      select a.*, row_number() over(partition by minute order by dt desc) as row
+      select a.*, row_number() over(partition by game, cast(table_amount as int), minute order by dt desc) as row
       from (
       select dt, minute, game_type as game, table_amount, SUM(CASE 
               WHEN flag = 'match_making_screen' AND matchmaking_complete_reason = 'SUCCESSFUL' THEN 
@@ -45,7 +58,7 @@ def get_data(slack_url, fallback_data):
 
       group by 1, 2, 3, 4
       ) a
-      where a.game in ('"""+game+"""') and table_amount = 1)
+      where a.game in ("""+game_string+""") and table_amount in ("""+table_string+"""))
       where row = 1
 
     """
@@ -54,9 +67,17 @@ def get_data(slack_url, fallback_data):
 
       df = pd.read_gbq(query = query, use_bqstorage_api=True)
 
-      df_dict = df.set_index('minute')[['num_users', 'mm_started']].to_dict('index')
+      result_dict = {}
 
-      result_dict = {str(minute): df_dict.get(minute, {'num_users': 0, 'mm_started': 0}) for minute in range(1, 145)}
+      for i, game in enumerate(games):
+
+        df_dict = df[(df['game'] == game) & (df['table_amount'] == tables[i])].set_index('minute')[['num_users', 'mm_started']].to_dict('index')
+
+        if game not in result_dict:
+
+          result_dict[game] = {}
+
+        result_dict[game][tables[i]] = {str(minute): df_dict.get(minute, {'num_users': 0, 'mm_started': 0}) for minute in range(1, 145)}
 
       message = 'Data loaded successfully'
 
@@ -64,7 +85,15 @@ def get_data(slack_url, fallback_data):
 
       if fallback_data == {}:
 
-        result_dict = {str(minute): {'num_users': 0, 'mm_started': 0} for minute in range(1, 145)}
+        result_dict = {}
+
+        for i, game in enumerate(games):
+
+          if game not in result_dict:
+
+            result_dict[game] = {}
+
+          result_dict[game][tables[i]] = {str(minute): {'num_users': 0, 'mm_started': 0} for minute in range(1, 145)}
 
       else:
 
