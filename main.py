@@ -1,6 +1,9 @@
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
+import os
+import pickle
 
 from utils.generative_model_utils import get_window as get_window_generative
 from utils.genetic_algorithm_utils import get_window as get_window_genetic
@@ -14,6 +17,7 @@ config = load_config()
 
 games = config['game']
 tables = config['table']
+table_ids = config['table_id']
 znode_path = config['znode_path']
 window = config['window']
 algo = config['algo']
@@ -32,7 +36,7 @@ data = get_data(slack_url, {})
 
 # function to load data periodically
 
-def call_get_data(slack_url):
+def call_get_data():
 
     global data
 
@@ -40,14 +44,36 @@ def call_get_data(slack_url):
 
 # window config update function
 
-def update_window(algo, zk, games, tables, generative_configs, znode_path, data, window, slack_url):
+def update_window():
 
     minute = nearest_10_minutes_ist()
 
+    ist = pytz.timezone('Asia/Kolkata')
+    date = datetime.now(ist)
+
+    if minute == 1:
+        date = date - timedelta(days=1)
+        num = 144
+    else:
+        num = minute - 1
+
+    date = date.strftime('%Y-%m-%d')
+
     for i, game in enumerate(games):
 
-        num_users = data[game][tables[i]][str(minute)]['num_users']
-        mm_starts = data[game][tables[i]][str(minute)]['mm_started']
+        num_users_ratio = data[game][tables[i]][str(minute)]['num_users']
+        mm_starts_ratio = data[game][tables[i]][str(minute)]['mm_started']
+
+        file_path = f'../dynamic_window_data/{table_ids[i]}_{date}_{num}.pickle'
+        
+        while not os.path.exists(file_path):
+            time.sleep(1)
+
+        with open(file_path, 'rb') as f:
+            liquidity = pickle.load(f)
+
+        num_users = liquidity['num_users'] * num_users_ratio
+        mm_starts = liquidity['mm_starts'] * mm_starts_ratio
 
         if algo == 'generative':
             v4_window = get_window_generative([*generative_configs[i], num_users, mm_starts], agg_type='mean')
@@ -72,13 +98,11 @@ if __name__ == "__main__":
 
     # Schedule function_1 to run every 10 minutes, starting from the nearest 10th minute
     start_time_1 = nearest_minute(datetime.now(), rounding=rounding)
-    scheduler.add_job(update_window, 'interval', minutes=10, start_date=start_time_1, 
-                      args=[algo, zk, games, tables, generative_configs, znode_path, data, window, slack_url])
+    scheduler.add_job(update_window, 'interval', minutes=10, start_date=start_time_1)
 
     # Schedule function_2 to run every 12 hours, starting from the nearest midnight or noon
     start_time_2 = nearest_midnight_noon(datetime.now())
-    scheduler.add_job(call_get_data, 'interval', hours=12, start_date=start_time_2,
-                      args=[slack_url])
+    scheduler.add_job(call_get_data, 'interval', hours=12, start_date=start_time_2)
 
     scheduler.start()
 

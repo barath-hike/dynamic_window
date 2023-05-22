@@ -23,9 +23,8 @@ def get_data(slack_url, fallback_data):
 
     query = """
 
+      with data as (
       select * from (
-      select a.*, row_number() over(partition by game, cast(table_amount as int), minute order by dt desc) as row
-      from (
       select dt, minute, game_type as game, table_amount, SUM(CASE 
               WHEN flag = 'match_making_screen' AND matchmaking_complete_reason = 'SUCCESSFUL' THEN 
                 CASE game_format 
@@ -52,20 +51,57 @@ def get_data(slack_url, fallback_data):
 
       from `analytics-156605.rush_app_bi.matchmaking_server_event_logs_v2` a 
       left join `analytics-156605.rush_app_data_import.gameTable` b on b.tableId = a.table_id
-      where DATE(time_stamp) >= current_date() - interval 2 day
+      where DATE(time_stamp) >= current_date() - interval 8 day
             )
       where lower(PLATFORM) ='cash'
 
       group by 1, 2, 3, 4
       ) a
       where a.game in ("""+game_string+""") and table_amount in ("""+table_string+"""))
-      where row = 1
+      ),
+
+      ratios AS (
+        SELECT
+          dt,
+          minute,
+          game,
+          table_amount,
+          LAG(mm_started) OVER (PARTITION BY game, cast(table_amount as string) ORDER BY dt, minute) as prev_mm_started,
+          LAG(num_users) OVER (PARTITION BY game, cast(table_amount as string) ORDER BY dt, minute) as prev_num_users,
+          mm_started,
+          num_users
+        FROM
+          data),
+        
+        ratio_calculations AS (
+        SELECT
+          dt,
+          minute,
+          game,
+          table_amount,
+          IF(minute=1 AND prev_mm_started IS NULL, mm_started / LAG(mm_started) OVER (PARTITION BY game, cast(table_amount as string) ORDER BY dt DESC, minute DESC), mm_started / prev_mm_started) as mm_started_ratio,
+          IF(minute=1 AND prev_num_users IS NULL, num_users / LAG(num_users) OVER (PARTITION BY game, cast(table_amount as string) ORDER BY dt DESC, minute DESC), num_users / prev_num_users) as num_users_ratio
+        FROM
+          ratios)
+        
+      SELECT
+        game,
+        table_amount,
+        minute,
+        AVG(mm_started_ratio) as mm_started,
+        AVG(num_users_ratio) as num_users
+      FROM
+        ratio_calculations
+      WHERE
+        dt >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      GROUP BY
+        1, 2, 3
 
     """
 
     try:
 
-      df = pd.read_gbq(query = query, use_bqstorage_api=True, project_id='analytics-156605')
+      df = pd.read_gbq(query = query, use_bqstorage_api=True)
 
       result_dict = {}
 
@@ -77,7 +113,7 @@ def get_data(slack_url, fallback_data):
 
           result_dict[game] = {}
 
-        result_dict[game][tables[i]] = {str(minute): df_dict.get(minute, {'num_users': 0, 'mm_started': 0}) for minute in range(1, 145)}
+        result_dict[game][tables[i]] = {str(minute): df_dict.get(minute, {'num_users': 1, 'mm_started': 1}) for minute in range(1, 145)}
 
       message = 'Data loaded successfully'
 
@@ -93,7 +129,7 @@ def get_data(slack_url, fallback_data):
 
             result_dict[game] = {}
 
-          result_dict[game][tables[i]] = {str(minute): {'num_users': 0, 'mm_started': 0} for minute in range(1, 145)}
+          result_dict[game][tables[i]] = {str(minute): {'num_users': 1, 'mm_started': 1} for minute in range(1, 145)}
 
       else:
 
