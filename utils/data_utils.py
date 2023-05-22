@@ -65,7 +65,7 @@ def get_data(slack_url, fallback_data):
 
     try:
 
-      df = pd.read_gbq(query = query, use_bqstorage_api=True)
+      df = pd.read_gbq(query = query, use_bqstorage_api=True, project_id='analytics-156605')
 
       result_dict = {}
 

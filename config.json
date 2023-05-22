@@ -108,6 +108,6 @@
 
     "algo": "generative",
     
-    "env": "staging"
+    "env": "prod"
 
 }

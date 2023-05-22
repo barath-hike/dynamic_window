@@ -4,35 +4,34 @@ import pickle
 import pytz
 import pandas as pd
 from datetime import datetime
+from time import sleep
+import threading
 
 from utils.config_utils import load_config
 
 def get_consumer():
 
     config = load_config()
+    kafka_config = config[config['env']]
 
-    hosts = config[config['env']]['kafka']['hosts']
-    topic_name = config[config['env']]['kafka']['topic_name']
-    group_id = config[config['env']]['kafka']['group_id']
+    hosts = kafka_config['kafka']['hosts']
+    topic_name = kafka_config['kafka']['topic_name']
+    group_id = kafka_config['kafka']['group_id']
 
     consumer = KafkaConsumer(*topic_name, bootstrap_servers=hosts, enable_auto_commit=True, group_id=group_id, value_deserializer=lambda x: loads(x))
 
     return consumer
 
 class DataAggregator:
-
     def __init__(self, pre):
-
         self.pre = pre
-
         self.ist = pytz.timezone('Asia/Kolkata')
         current_time_ist = datetime.now(self.ist)
-
         self.current_time_rounded = self.round_time_to_ten_minutes(current_time_ist)
         self.start_time = self.current_time_rounded
-
         self.data = []
         self.counter = self.calculate_counter(self.current_time_rounded)
+        self.start_timer()
 
     @staticmethod
     def round_time_to_ten_minutes(dt):
@@ -44,22 +43,24 @@ class DataAggregator:
         return dt.hour * 6 + dt.minute // 10 + 1
 
     def add(self, record):
-        
-        current_time_ist = datetime.now(self.ist)
-        current_time_rounded = self.round_time_to_ten_minutes(current_time_ist)
-        if current_time_rounded > self.current_time_rounded:
-            self.dump_data()
-            self.reset(current_time_rounded)
-
         self.data.append(record)
 
     def dump_data(self):
 
-        data = pd.DataFrame(self.data)
-        out = {
-            'mm_starts': len(data[['userid', 'mmid']].drop_duplicates()),
-            'num_users': len(data['userid'].unique())
-        }
+        if len(self.data) == 0:
+
+            out = {
+                'mm_starts': 0,
+                'num_users': 0
+            }
+
+        else:
+
+            data = pd.DataFrame(self.data)
+            out = {
+                'mm_starts': len(data[['userid', 'mmid']].drop_duplicates()),
+                'num_users': len(data['userid'].unique())
+            }
 
         current_time_ist = datetime.now(self.ist)
         current_time_ist = current_time_ist.strftime('%Y-%m-%d')
@@ -67,8 +68,24 @@ class DataAggregator:
         with open(f'../dynamic_window_data/{self.pre}_{current_time_ist}_{self.counter}.pickle', 'wb') as f:
             pickle.dump(out, f)
 
+        print("Saved " + str(out) + " at")
+        print(f'../dynamic_window_data/{self.pre}_{current_time_ist}_{self.counter}.pickle')
+
     def reset(self, new_start_time):
-        
         self.current_time_rounded = new_start_time
         self.data = []
         self.counter = self.calculate_counter(self.current_time_rounded)
+
+    def start_timer(self):
+        timer_thread = threading.Thread(target=self.periodic_dump)
+        timer_thread.daemon = True
+        timer_thread.start()
+
+    def periodic_dump(self):
+        while True:
+            current_time_ist = datetime.now(self.ist)
+            current_time_rounded = self.round_time_to_ten_minutes(current_time_ist)
+            if current_time_rounded > self.current_time_rounded:
+                self.dump_data()
+                self.reset(current_time_rounded)
+            sleep(10)  # sleep for 60 seconds

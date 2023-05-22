@@ -5,7 +5,7 @@ consumer = get_consumer()
 
 config = load_config()
 
-table_ids = config['table_ids']
+table_ids = config['table_id']
 aggregators = {table_id:DataAggregator(table_id) for table_id in table_ids}
 
 for message in consumer:
