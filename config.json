@@ -3,6 +3,8 @@
 
     "table": [1, 2],
 
+    "table_id": ["table1669900096968_cash", "table1677119225628_cash"],
+
     "generative_configs": [[0.05, 2, 4, 5, 6, 8], [0.05, 2, 4, 5, 6, 8]],
 
     "znode_path": "/mazuma/matchmaking/milestonesMapPerGame/",
@@ -55,9 +57,11 @@
     "visible_dist": "lognormal",
 
     "prod": {
+
         "zk": {
             "host": ["zk01-platform.hike.in:2181", "zk02-platform.hike.in:2181", "zk03-platform.hike.in:2181"]
         },
+
         "mongo": {
             "host": "matchmaking-query.getrushapp.com",
             "port": 27015,
@@ -65,13 +69,26 @@
             "pass_word": "M@tcHmak3r14102021",
             "db_name": "rush",
             "collection_name": "dynamic_window_config"
+        },
+
+        "kafka": {
+            "hosts": ["infraanalyticsv3-2-01.hikeapp.com:9092", 
+                      "infraanalyticsv3-2-02.hikeapp.com:9092", 
+                      "infraanalyticsv3-2-03.hikeapp.com:9092", 
+                      "infraanalyticsv3-2-04.hikeapp.com:9092", 
+                      "infraanalyticsv3-2-05.hikeapp.com:9092"],
+            "group_id": "ds-dynamic-window-config",
+            "topic_name": ["rush_analytics"]
         }
+
     },
 
     "staging": {
+
         "zk": {
             "host": ["10.20.0.21:2181"]
         },
+
         "mongo": {
             "host": "10.26.0.23",
             "port": 27015,
@@ -79,7 +96,14 @@
             "pass_word": "Db@wr1t3r07122020",
             "db_name": "rush_matchmaking",
             "collection_name": "dynamic_window_config"
+        },
+
+        "kafka": {
+            "hosts": "kafka-stage-broker-01.hike.in:9092",
+            "group_id": "ds-dynamic-window-config",
+            "topic_name": ["rush_analytics"]
         }
+
     },
 
     "algo": "generative",
