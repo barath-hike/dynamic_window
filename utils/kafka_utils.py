@@ -24,7 +24,7 @@ class DataAggregator:
     def __init__(self, pre):
 
         self.pre = pre
-        
+
         self.ist = pytz.timezone('Asia/Kolkata')
         current_time_ist = datetime.now(self.ist)
 
@@ -64,7 +64,7 @@ class DataAggregator:
         current_time_ist = datetime.now(self.ist)
         current_time_ist = current_time_ist.strftime('%Y-%m-%d')
 
-        with open(f'../data/{self.pre}_{current_time_ist}_{self.counter}.pickle', 'wb') as f:
+        with open(f'../dynamic_window_data/{self.pre}_{current_time_ist}_{self.counter}.pickle', 'wb') as f:
             pickle.dump(out, f)
 
     def reset(self, new_start_time):
