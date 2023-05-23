@@ -57,7 +57,7 @@ def get_data(slack_url, fallback_data):
 
       group by 1, 2, 3, 4
       ) a
-      where a.game in ("""+game_string+""") and table_amount in ("""+table_string+"""))
+      where a.game in ("""+game_string+""") and table_amount in ("""+table_string+""")
       ),
 
       ratios AS (
