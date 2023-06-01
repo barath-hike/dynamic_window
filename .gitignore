@@ -1,4 +1,2 @@
 slack_url.json
-__pycache__
-utils/__pycache__
-ml_model/__pycache__
+**/__pycache__/
