@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from utils.config_utils import load_config
-from ml_model.gen_model import GenModel
+from ml_model.gen_model_1 import GenModel
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="1"
@@ -25,16 +25,17 @@ with open('./ml_model/saved_models/scaler.pickle', 'rb') as f:
 
 # neural network model
 
+# dist = GenModel((8,), (15,), distribution=visible_dist, num_mixtures=20)
+# inp = tfk.Input(shape=(8,))
+# out = dist.network.call(inp)
+
+# model = tfk.Model(inputs=inp, outputs=out)
+
+# save_dir = './ml_model/saved_models/window_logic_gen_model_' + visible_dist + '/'
+
+# model.load_weights(save_dir + 'weights.hdf5')
+
 dist = GenModel((8,), (15,), distribution=visible_dist, num_mixtures=20)
-inp = tfk.Input(shape=(8,))
-out = dist.network.call(inp)
-
-model = tfk.Model(inputs=inp, outputs=out)
-
-save_dir = './ml_model/saved_models/window_logic_gen_model_' + visible_dist + '/'
-
-model.load_weights(save_dir + 'weights.hdf5')
-
 
 def ensure_increasing_order(arr):
     for i in range(1, len(arr)):
@@ -45,7 +46,7 @@ def ensure_increasing_order(arr):
 def get_window(x, agg_type='mean'):
 
     x = np.array(x).reshape(1, -1)
-    x = scaler.transform(x)
+    x = scaler.transform(x).astype('float32')
     pred = np.array(dist.sample_n(x, 100))
 
     if agg_type == 'median':
