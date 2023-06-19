@@ -1,11 +1,63 @@
 {
-    "game": ["fruitfight"],
+    "game": [
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo",
+        "ludo"
+    ],
 
-    "table": [1],
+    "table": [
+        107.75,
+        172.9,
+        218,
+        342.5,
+        431.75,
+        680,
+        856.95,
+        1398,
+        2770.5,
+        5479,
+        10880,
+        21525
+    ],
 
-    "table_id": ["table1669900096968_cash"],
+    "table_id": [
+        "table1686634627111_",
+        "table1686633488754_",
+        "table1686634703900_",
+        "table1686893236088_",
+        "table1686634808755_",
+        "table1686633609149_",
+        "table1686634932422_",
+        "table1686633659850_",
+        "table1686633728833_",
+        "table1686633795623_",
+        "table1686633845954_",
+        "table1686633920027_"
+    ],
 
-    "generative_configs": [[0.05, 2, 4, 5, 6, 8]],
+    "generative_configs": [
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8],
+        [0.05, 2, 4, 5, 6, 8]
+    ],
 
     "znode_path": "/mazuma/matchmaking/milestonesMapPerGame/",
 
@@ -56,7 +108,7 @@
                       "infraanalyticsv3-2-03.hikeapp.com:9092", 
                       "infraanalyticsv3-2-04.hikeapp.com:9092", 
                       "infraanalyticsv3-2-05.hikeapp.com:9092"],
-            "group_id": "ds-dynamic-window-config",
+            "group_id": "ds-dynamic-window-config-temp-1",
             "topic_name": ["rush_analytics"]
         }
 
@@ -87,6 +139,6 @@
 
     "algo": "generative",
     
-    "env": "staging"
+    "env": "prod"
 
 }

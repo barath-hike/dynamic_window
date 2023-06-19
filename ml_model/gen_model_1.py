@@ -90,7 +90,7 @@ class GenModel(distribution.Distribution):
 
     def sample_n(self, inputs, n):
 
-        params = self.model.run(None, {'input_1': inputs})[0]
+        params = self.network.run(None, {'input_1': inputs})[0]
 
         dist = self.mixture_dist(params)
 

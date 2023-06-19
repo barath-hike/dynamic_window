@@ -101,7 +101,7 @@ def get_data(slack_url, fallback_data):
 
     try:
 
-      df = pd.read_gbq(query = query, use_bqstorage_api=True)
+      df = pd.read_gbq(query = query, use_bqstorage_api=True, project_id='analytics-156605')
 
       result_dict = {}
 
@@ -140,6 +140,6 @@ def get_data(slack_url, fallback_data):
       message = 'Data load failed, using old data'
 
     print(message)
-    requests.post(slack_url, json={"text": message})
+    # requests.post(slack_url, json={"text": message})
 
     return result_dict

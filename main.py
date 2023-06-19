@@ -80,12 +80,13 @@ def update_window():
         elif algo == 'genetic':
             v4_window = get_window_genetic(num_users, mm_starts, minute, game, table=tables[i])
 
-        window_new = window[i].copy()
+        window_new = window[0].copy()
         window_new['v4'] = v4_window
 
-        updated_window = update_znode(zk, game, znode_path, window_new, window, slack_url)
+        # updated_window = update_znode(zk, game, znode_path, window_new, window, slack_url)
+        print(f"Window for table {tables[i]} is {v4_window}")
 
-        push_to_mongo(col, game, tables[i], minute, updated_window, num_users, mm_starts)
+        # push_to_mongo(col, game, tables[i], minute, updated_window, num_users, mm_starts)
 
 if __name__ == "__main__":
 
