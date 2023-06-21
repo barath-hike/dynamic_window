@@ -1,13 +1,22 @@
 import pandas as pd
 import requests
+import pandas_gbq
+from google.auth import compute_engine
+
 from utils.config_utils import load_config
+
+project_id = 'analytics-156605'
+
+credentials = compute_engine.Credentials()
+pandas_gbq.context.credentials = credentials
+pandas_gbq.context.project = project_id
 
 def get_data(slack_url, fallback_data):
 
     config = load_config()
 
-    games = config['game']
-    tables = config['table']
+    games = [temp["game_name"] for temp in config['games']]
+    tables = [item["amount"] for temp in config['games'] for item in temp["tables"]]
 
     for i, game in enumerate(games):
       if i == 0:
@@ -101,19 +110,21 @@ def get_data(slack_url, fallback_data):
 
     try:
 
-      df = pd.read_gbq(query = query, use_bqstorage_api=True, project_id='analytics-156605')
+      df = pd.read_gbq(query = query, use_bqstorage_api=True, project_id=project_id, credentials=credentials)
 
       result_dict = {}
 
-      for i, game in enumerate(games):
+      for i, game in enumerate(config['games']):
 
-        df_dict = df[(df['game'] == game) & (df['table_amount'] == tables[i])].set_index('minute')[['num_users', 'mm_started']].to_dict('index')
+        for j, table in enumerate(game["tables"]):
 
-        if game not in result_dict:
+          df_dict = df[(df['game'] == game["game_name"]) & (df['table_amount'] == table["amount"])].set_index('minute')[['num_users', 'mm_started']].to_dict('index')
 
-          result_dict[game] = {}
+          if game["game_name"] not in result_dict:
 
-        result_dict[game][tables[i]] = {str(minute): df_dict.get(minute, {'num_users': 1, 'mm_started': 1}) for minute in range(1, 145)}
+            result_dict[game["game_name"]] = {}
+
+          result_dict[game["game_name"]][table["amount"]] = {str(minute): df_dict.get(minute, {'num_users': 1, 'mm_started': 1}) for minute in range(1, 145)}
 
       message = 'Data loaded successfully'
 
@@ -123,13 +134,15 @@ def get_data(slack_url, fallback_data):
 
         result_dict = {}
 
-        for i, game in enumerate(games):
+        for i, game in enumerate(config['games']):
 
-          if game not in result_dict:
+          for j, table in enumerate(game["tables"]):
 
-            result_dict[game] = {}
+            if game["game_name"] not in result_dict:
 
-          result_dict[game][tables[i]] = {str(minute): {'num_users': 1, 'mm_started': 1} for minute in range(1, 145)}
+              result_dict[game["game_name"]] = {}
+
+            result_dict[game["game_name"]][table["amount"]] = {str(minute): {'num_users': 1, 'mm_started': 1} for minute in range(1, 145)}
 
       else:
 

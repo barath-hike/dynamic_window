@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import pytz
 import os
 import pickle
+import json
+import requests
 
 from utils.generative_model_utils import get_window as get_window_generative
 from utils.genetic_algorithm_utils import get_window as get_window_genetic
@@ -15,18 +17,10 @@ from utils.mongo_utils import mongo_connection, push_to_mongo
 
 config = load_config()
 
-games = config['game']
-tables = config['table']
-table_ids = config['table_id']
-znode_path = config['znode_path']
-window = config['window']
+games = config['games']
 algo = config['algo']
-generative_configs = config['generative_configs']
 
 slack_url = load_slack_config()
-
-# zk connection
-zk = zk_connection()
 
 # mongo connection
 col = mongo_connection()
@@ -61,41 +55,75 @@ def update_window():
 
     for i, game in enumerate(games):
 
-        num_users_ratio = data[game][tables[i]][str(minute)]['num_users']
-        mm_starts_ratio = data[game][tables[i]][str(minute)]['mm_started']
+        out = {}
+        out[game["game_name"]] = {}
+        out[game["game_name"]]["defaultData"] = game["default_window"]
+        out[game["game_name"]]["rangeData"] = []
 
-        file_path = f'../dynamic_window_data/{table_ids[i]}_{date}_{num}.pickle'
-        
-        while not os.path.exists(file_path):
-            time.sleep(1)
+        if i == (len(games) - 1):
+            out["invalidateCache"] = True
+        else:
+            out["invalidateCache"] = False
 
-        with open(file_path, 'rb') as f:
-            liquidity = pickle.load(f)
+        for table in game["tables"]:
 
-        num_users = liquidity['num_users'] * num_users_ratio
-        mm_starts = liquidity['mm_starts'] * mm_starts_ratio
+            record = {}
 
-        if algo == 'generative':
-            v4_window = get_window_generative([*generative_configs[i], num_users, mm_starts], agg_type='mean')
-        elif algo == 'genetic':
-            v4_window = get_window_genetic(num_users, mm_starts, minute, game, table=tables[i])
+            window_new = game["window"].copy()
 
-        window_new = window[0].copy()
-        window_new['v4'] = v4_window
+            num_users_ratio = data[game["game_name"]][table["amount"]][str(minute)]['num_users']
+            mm_starts_ratio = data[game["game_name"]][table["amount"]][str(minute)]['mm_started']
 
-        # updated_window = update_znode(zk, game, znode_path, window_new, window, slack_url)
-        print(f"Window for table {tables[i]} is {v4_window}")
+            file_path = f'../dynamic_window_data/{table["table_id"]}_{date}_{num}.pickle'
+            
+            start_time = datetime.now()
+            path_exists = False
 
-        # push_to_mongo(col, game, tables[i], minute, updated_window, num_users, mm_starts)
+            while not os.path.exists(file_path):
+                if datetime.now() - start_time > timedelta(minutes=0.5):
+                    break
+                time.sleep(1)
+            else:
+                path_exists = True
+
+            if path_exists:
+
+                with open(file_path, 'rb') as f:
+                    liquidity = pickle.load(f)
+
+                num_users = liquidity['num_users'] * num_users_ratio
+                mm_starts = liquidity['mm_starts'] * mm_starts_ratio
+
+                if algo == 'generative':
+                    v4_window = get_window_generative([*table["generative_configs"], num_users, mm_starts], agg_type='mean')
+                elif algo == 'genetic':
+                    v4_window = get_window_genetic(num_users, mm_starts, minute, game["game_name"], table=table["amount"])
+
+                
+                window_new['v4'] = v4_window
+
+            record["start"] = table["range_start"]
+            record["end"] = table["range_end"]
+            record["window"] = window_new
+
+            out[game["game_name"]]["rangeData"].append(record)
+
+            # push_to_mongo(col, game, tables[i], minute, updated_window, num_users, mm_starts)
+
+            # updated_window = update_znode(zk, game, znode_path, window_new, window, slack_url)
+
+        print(f"{json.dumps(out, indent=4)}")
+        # requests.post(slack_url, json={"text": json.dumps(out, indent=4)})
+
 
 if __name__ == "__main__":
 
     scheduler = BackgroundScheduler()
 
     if algo == 'generative':
-        rounding = 9.5
+        rounding = 10
     elif algo == 'genetic':
-        rounding = 8.5
+        rounding = 10
 
     # Schedule function_1 to run every 10 minutes, starting from the nearest 10th minute
     start_time_1 = nearest_minute(datetime.now(), rounding=rounding)

@@ -2,7 +2,6 @@ from kafka import KafkaConsumer
 from json import loads
 import pickle
 import pytz
-import pandas as pd
 from datetime import datetime
 from time import sleep
 import threading
@@ -56,20 +55,21 @@ class DataAggregator:
 
         else:
 
-            data = pd.DataFrame(self.data)
             out = {
-                'mm_starts': len(data[['userid', 'mmid']].drop_duplicates()),
-                'num_users': len(data['userid'].unique())
+                'mm_starts': len(set((d['userid'], d['mmid']) for d in self.data)),
+                'num_users': len(set(d['userid'] for d in self.data))
             }
 
         current_time_ist = datetime.now(self.ist)
         current_time_ist = current_time_ist.strftime('%Y-%m-%d')
 
-        with open(f'../dynamic_window_data/{self.pre}_{current_time_ist}_{self.counter}.pickle', 'wb') as f:
+        filename = f'../dynamic_window_data/{self.pre}_{current_time_ist}_{self.counter}.pickle'
+
+        with open(filename, 'wb') as f:
             pickle.dump(out, f)
 
         print("Saved " + str(out) + " at")
-        print(f'../dynamic_window_data/{self.pre}_{current_time_ist}_{self.counter}.pickle')
+        print(filename)
 
     def reset(self, new_start_time):
         self.current_time_rounded = new_start_time

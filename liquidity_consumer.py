@@ -9,26 +9,34 @@ table_ids = config['table_id']
 aggregators = {table_id:DataAggregator(table_id) for table_id in table_ids}
 
 def check_start(string, str_list):
-    for i, s in enumerate(str_list):
-        if string.startswith(s):
-            return True, i
-    return False, None
+    # for i, s in enumerate(str_list):
+    #     if string.startswith(s):
+    #         return True, i
+    # return False, None
+    index = next((i for i, s in enumerate(str_list) if string.startswith(s)), None)
+    return (index is not None), index
 
 for message in consumer:
 
-    value = message.value
+    try:
 
-    if 'o' in value and 'k' in value and value['k'] == 'rush' and value['o'] == 'table_search_started' and 'f' in value and 'fu' in value and 's' in value:
+        value = message.value
 
-        table_id = value['s']
+        if value['k'] == 'rush' and value['o'] == 'table_search_started':
 
-        is_table, index = check_start(table_id, table_ids)
+            table_id = value['s']
 
-        if is_table:
+            is_table, index = check_start(table_id, table_ids)
 
-            userid = value['fu']
-            mmid = value['f']
+            if is_table:
 
-            record = {'userid': userid, 'mmid': mmid}
+                userid = value['fu']
+                mmid = value['f']
 
-            data_agg = aggregators[table_ids[index]].add(record)
+                record = {'userid': userid, 'mmid': mmid}
+
+                data_agg = aggregators[table_ids[index]].add(record)
+
+    except Exception as e:
+
+        print(f"Exception in message {e}")
